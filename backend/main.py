@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from db import init, load, create, read, update, delete
+from db import init, load, create, read, update, delete, get_counter, get_all_counters
 
 app = FastAPI(
     title="Fullstack API",
@@ -9,6 +9,7 @@ app = FastAPI(
 )
 
 init()
+load()  # Load data and counters on startup
 # Configure CORS to allow frontend connections
 app.add_middleware(
     CORSMiddleware,
@@ -50,3 +51,13 @@ async def delete_item(id: int):
     delete(id)
     return {"message": "Item deleted", "id": id}
 
+
+@app.get("/api/rows", response_model=List[Row])
+def get_rows():
+    return TABLE
+
+@app.post("/api/rows", response_model=List[Row])
+def replace_rows(rows: List[Row]):
+    global TABLE
+    TABLE = rows
+    return TABLE
