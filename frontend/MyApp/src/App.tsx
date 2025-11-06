@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Table from './table';
 
 // Component to READ data from backend
 function ReadComponent() {
@@ -62,11 +63,21 @@ function WriteComponent() {
     );
 }
 
+function TableComponent() {
+    return (
+        <div>
+            <h2>Table</h2>
+            <Table />
+        </div>
+    );
+}
+
 function App() {
     return (
         <div style={{ padding: '20px' }}>
             <ReadComponent />
             <WriteComponent />
+            <TableComponent />
         </div>
     );
 }

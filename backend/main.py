@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+import asyncio
+from typing import Set, Dict
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from db import init, load, create, read, update, delete, get_counter, get_all_counters
 
@@ -9,7 +11,7 @@ app = FastAPI(
 )
 
 init()
-load()  # Load data and counters on startup
+# load()  # Load data and counters on startup
 # Configure CORS to allow frontend connections
 app.add_middleware(
     CORSMiddleware,
@@ -33,31 +35,50 @@ async def health_check():
 @app.get("/api/items")
 # return str or None
 async def get_items(id: int):
+    broadcast_table_nowait()
     return read(id)
 
 
 @app.post("/api/items")
 async def create_item(item: str):
     id = create(item)
+    broadcast_table_nowait()
     return {"message": "Item created", "item": item, "id": id}
 
 @app.put("/api/items")
 async def update_item(id: int, item: str):
     update(id, item)
+    broadcast_table_nowait()
     return {"message": "Item updated", "item": item, "id": id}
 
 @app.delete("/api/items")
 async def delete_item(id: int):
     delete(id)
+    broadcast_table_nowait()
     return {"message": "Item deleted", "id": id}
 
 
-@app.get("/api/rows", response_model=List[Row])
-def get_rows():
-    return TABLE
 
-@app.post("/api/rows", response_model=List[Row])
-def replace_rows(rows: List[Row]):
-    global TABLE
-    TABLE = rows
-    return TABLE
+clients: Set[WebSocket] = set()
+
+@app.websocket("/ws_counters")
+async def ws(ws: WebSocket):
+    await ws.accept()
+    clients.add(ws)
+    try:
+        await ws.send_json(get_all_counters())  # initial state
+        while True:
+            await ws.receive_text()  # keep alive, ignore input
+    except WebSocketDisconnect:
+        clients.discard(ws)
+
+async def _broadcast(snapshot: Dict[int, int]):
+    for c in list(clients):
+        try:
+            await c.send_json(snapshot)
+        except Exception:
+            clients.discard(c)
+
+def broadcast_table_nowait():
+    """Call after you mutate `table`. Returns immediately."""
+    asyncio.get_running_loop().create_task(_broadcast(get_all_counters()))

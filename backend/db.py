@@ -69,12 +69,13 @@ def read(id: int) -> str:
 
 def get_table() -> dict[int, str]:
     return TABLE
-    
+
 
 def get_counter(id: int) -> int:
+    assert id in COUNTER, f"Counter for item {id} not found"
     return COUNTER.get(id, 0)
 
 def get_all_counters():
-    return dict(COUNTER)
+    return COUNTER
     
 
