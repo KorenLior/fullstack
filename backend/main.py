@@ -2,7 +2,7 @@ import asyncio
 from typing import Set, Dict
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from db import init, load, create, read, update, delete, get_counter, get_all_counters
+from db import init, create, read, update, delete, get_counter, get_all_counters
 
 app = FastAPI(
     title="Fullstack API",
@@ -11,7 +11,6 @@ app = FastAPI(
 )
 
 init()
-# load()  # Load data and counters on startup
 # Configure CORS to allow frontend connections
 app.add_middleware(
     CORSMiddleware,
