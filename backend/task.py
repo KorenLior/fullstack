@@ -26,4 +26,9 @@ class Task:
         )
 
     def analyze(self) -> list[str]:
-        return model(init_request=self.init_request)
+        valid, actions = model(init_request=self.init_request)
+        if not valid:
+            self.action_tasks.clear()
+            return []
+        self.action_tasks = list(actions)
+        return list(self.action_tasks)

@@ -1,24 +1,37 @@
-import { useEffect } from "react";
-import { create } from "zustand";
+import { useEffect, useSyncExternalStore } from "react";
 
 type Table = Record<number, number>;
 
-const useStore = create<{ table: Table; setTable: (t: Table) => void }>((set) => ({
-  table: {},
-  setTable: (t) => set({ table: t }),
-}));
+let state: Table = {};
+const listeners = new Set<() => void>();
 
-export default function App() {
-  const { table, setTable } = useStore();
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  const unsubscribe = () => {
+    listeners.delete(listener);
+  };
+  return unsubscribe;
+}
+
+function getSnapshot() {
+  return state;
+}
+
+function setState(next: Table) {
+  state = next;
+  for (const notify of listeners) {
+    notify();
+  }
+}
+
+export default function TableView() {
+  const table = useSyncExternalStore(subscribe, getSnapshot);
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8000/ws_counters");
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      setTable(data);
-    };
+    ws.onmessage = (event) => setState(JSON.parse(event.data));
     return () => ws.close();
-  }, [setTable]);
+  }, []);
 
   return <pre>{JSON.stringify(table, null, 2)}</pre>;
 }

@@ -24,6 +24,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+4. Provide an OpenAI API key (one of the following):
+   - Set the `FLOWPAD_OPENAI_API_KEY` environment variable, **or**
+   - Create a file `backend/openai_api_key.txt` containing only the key (this file is ignored by git).
+
 ## Running the Server
 
 Start the development server:

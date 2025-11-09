@@ -43,4 +43,6 @@ Thumbs.db
 
 # Backend data
 backend/data.json
+backend/counter.json
+backend/openai_api_key.txt
 
